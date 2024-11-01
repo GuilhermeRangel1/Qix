@@ -1,0 +1,27 @@
+# Ignorar arquivos de compilação
+*.o
+*.exe
+*.out
+
+# Ignorar diretórios de dependências
+/node_modules/
+/venv/
+/build/
+/dist/
+
+# Ignorar arquivos de configuração
+*.log
+*.tmp
+*.bak
+
+# Ignorar arquivos de sistema
+.DS_Store
+Thumbs.db
+
+# Ignorar a pasta de construção do CMake
+cmake-build-debug/
+
+# Ignorar o arquivo CMakeLists.txt
+CMakeLists.txt
+
+.idea/
