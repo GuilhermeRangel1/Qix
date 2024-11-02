@@ -1,21 +1,50 @@
-#include <stdio.h>
 #include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
 #include "screen.h"
 #include "keyboard.h"
 #include "timer.h"
 
-int main(){
+struct jogador{
+    int x;
+    int y;
+    char personagem[2];
+};
 
-    screenInit(1); 
+struct qix{
+    int x;
+    int y;
+};
 
-    screenSetColor(LIGHTGREEN, BLACK);
+struct jogador player = {0,0,'@'};
 
-    int x = (MAXX - 12) / 2;
-    int y = MAXY / 2; 
-    screenGotoxy(x, y); 
-    printf("Hello, World!\n"); 
-    
-    getchar(); 
+void comeco() {
+    int centerX = (MAXX - strlen(player.personagem)) / 2;
+    int fimTela = MAXY;
+    screenSetColor(YELLOW, BLACK);
+    screenGotoxy(centerX, fimTela);
+    printf("%s",player.personagem);
+}
+
+void mov(int proxX,int proxY){
+    screenSetColor(CYAN, DARKGRAY);
+    screenGotoxy(player.x, player.y);
+    printf(" ");
+    player.x = proxX;
+    player.y = proxY;
+    screenGotoxy(proxX,proxY);
+    printf("%s",player.personagem);
+}
+
+int main() {
+    screenInit(1);
+    keyboardInit();
+
+    comeco();
+
+    screenUpdate();
+    getchar();
+
+    keyboardDestroy();
     screenDestroy();
-
     return 0;}
