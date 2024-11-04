@@ -19,11 +19,11 @@ void desenhaMoldura() {
     for (int x = 0; x < MAXX; x++) {
         screenGotoxy(x, 0);
         printf("═");
-        screenGotoxy(x, MAXY - 1);
+        screenGotoxy(x, MAXY);
         printf("═");
     }
 
-    for (int y = 0; y < MAXY; y++) {
+    for (int y = 0; y <= MAXY; y++) {
         screenGotoxy(0, y);
         printf("║");
         screenGotoxy(MAXX - 1, y);
@@ -34,9 +34,9 @@ void desenhaMoldura() {
     printf("╔");
     screenGotoxy(MAXX - 1, 0);
     printf("╗");
-    screenGotoxy(0, MAXY - 1);
+    screenGotoxy(0, MAXY);
     printf("╚");
-    screenGotoxy(MAXX - 1, MAXY - 1);
+    screenGotoxy(MAXX - 1, MAXY);
     printf("╝");
 }
 
@@ -46,10 +46,30 @@ void comeco() {
     printf("%s", player.personagem);
 }
 
+int check_XY(int playerX, int playerY) {
+    int n = 0;
+    if (playerX == MINX || playerX == MAXX - 1) {
+        n = 1;
+    }
+    else if (playerY == MINY || playerY == MAXY) {
+        n = 2;
+    }
+    return n;
+}
+
 void mov(int proxX, int proxY) {
-    screenSetColor(BLACK, BLACK); 
+    screenSetColor(CYAN, BLACK); 
     screenGotoxy(player.x, player.y);
-    printf(" "); 
+    if (check_XY(player.x, player.y) == 2){
+        printf("═");
+    }
+    else if (check_XY(player.x, player.y) == 1){
+        printf("║"); 
+    }
+    else if (check_XY(player.x, player.y) == 0){
+        printf("*");
+    }
+    
 
     player.x = proxX;
     player.y = proxY;
@@ -58,6 +78,8 @@ void mov(int proxX, int proxY) {
     screenGotoxy(player.x, player.y);
     printf("%s", player.personagem);
 }
+
+
 
 void iniciarJogo() {
     screenClear();  
@@ -71,22 +93,23 @@ void iniciarJogo() {
             ch = readch();
             switch (ch) {
                 case 119: 
-                    if (player.y - 1 > 1) { 
-                        mov(player.x, player.y - 1);
-                    }
+                        if (player.y > MINY){
+                            mov(player.x, player.y - 1);
+                        }
+                        
                     break;
                 case 115: 
-                    if (player.y + 1 < MAXY - 2) {
+                    if (player.y < MAXY) {
                         mov(player.x, player.y + 1);
                     }
                     break;
                 case 97: 
-                    if (player.x - 1 > 1) { 
+                    if (player.x > MINX) { 
                         mov(player.x - 1, player.y);
                     }
                     break;
                 case 100: 
-                    if (player.x + 1 < MAXX - 2) { 
+                    if (player.x < MAXX - 1) { 
                         mov(player.x + 1, player.y);
                     }
                     break;
