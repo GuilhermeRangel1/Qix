@@ -1,7 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
-#include <time.h>
 #include "screen.h"
 #include "keyboard.h"
 #include "timer.h"
@@ -75,11 +74,9 @@ void moverInimigo() {
     screenGotoxy(enemy.x, enemy.y);
     printf(" ");
 
-    
     int newX = enemy.x + enemy.incX;
     int newY = enemy.y + enemy.incY;
 
-    
     if (newX >= MAXX - 1 || newX <= 1) {
         enemy.incX = -enemy.incX;
     }
@@ -87,7 +84,6 @@ void moverInimigo() {
         enemy.incY = -enemy.incY;
     }
 
-    
     enemy.x += enemy.incX;
     enemy.y += enemy.incY;
 
@@ -111,8 +107,9 @@ void iniciarJogo() {
     screenUpdate();
 
     int ch = 0;
-    int inimigoTimer = 0;  
-    const int inimigoDelay = 1;  
+    const int inimigoDelay = 100;  
+
+    timerInit(inimigoDelay);  
 
     while (ch != 27) {  
         if (keyhit()) {
@@ -144,12 +141,8 @@ void iniciarJogo() {
         }
 
         if (timerTimeOver()) {  
-            if (inimigoTimer >= inimigoDelay) {
-                moverInimigo();
-                inimigoTimer = 0;  
-            } else {
-                inimigoTimer++;
-            }
+            moverInimigo();
+            timerUpdateTimer(inimigoDelay);  
         }
 
         if (verificarColisao()) {
@@ -260,7 +253,6 @@ void menu() {
 }
 
 int main() {
-    srand(time(NULL));
     screenInit(1);
     keyboardInit();
     timerInit(30);  
