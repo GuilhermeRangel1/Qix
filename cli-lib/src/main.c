@@ -40,47 +40,26 @@ void desenhaMoldura() {
     printf("╝");
 }
 
-void exibirOpcoesMenu(int opcaoSelecionada) {
-    screenSetColor(YELLOW, BLACK);  
-    screenGotoxy(MAXX / 2 - 3, 2); 
-    printf("QIX GAME");
-
-    
-    screenGotoxy(MAXX / 2 - 4, 5); 
-    printf("%sJOGAR", opcaoSelecionada == 1 ? "-> " : "   ");
-
-    screenGotoxy(MAXX / 2 - 7, 7); 
-    printf("%sINSTRUÇÕES", opcaoSelecionada == 2 ? "-> " : "   ");
-
-    screenGotoxy(MAXX / 2 - 6, 9); 
-    printf("%sCRÉDITOS", opcaoSelecionada == 3 ? "-> " : "   ");
-
-    screenGotoxy(MAXX / 2 - 4, 11); 
-    printf("%sSAIR", opcaoSelecionada == 4 ? "-> " : "   ");
-}
-
 void comeco() {
-    screenSetColor(RED, BLACK); 
+    screenSetColor(CYAN, BLACK); 
     screenGotoxy(player.x, player.y); 
     printf("%s", player.personagem);
 }
 
 void mov(int proxX, int proxY) {
-    screenSetColor(YELLOW, BLACK); 
+    screenSetColor(BLACK, BLACK); 
     screenGotoxy(player.x, player.y);
-    printf("*"); 
+    printf(" "); 
 
     player.x = proxX;
     player.y = proxY;
 
-    screenSetColor(RED, BLACK); 
+    screenSetColor(CYAN, BLACK); 
     screenGotoxy(player.x, player.y);
     printf("%s", player.personagem);
 }
 
 void iniciarJogo() {
-    player.x = MAXX / 2;
-    player.y = MAXY - 2;
     screenClear();  
     desenhaMoldura(); 
     comeco();  
@@ -121,13 +100,13 @@ void iniciarJogo() {
 
 void menu() {
     int opcao = 1; 
-    int ch = 0;
+    int tecla;
+
+    screenClear();  // Limpa a tela uma vez no início do menu
+    desenhaMoldura();  // Desenha a moldura uma vez no início do menu
 
     while (1) {
-        screenClear();
-        desenhaMoldura();
-        
-        
+        // Exibe o título e as opções do menu, atualizando apenas as opções
         screenSetColor(YELLOW, BLACK);
         screenGotoxy(MAXX / 2 - 3, 2);
         printf("QIX GAME");
@@ -158,6 +137,8 @@ void menu() {
             switch (opcao) {
                 case 1:
                     iniciarJogo();
+                    screenClear();
+                    desenhaMoldura();
                     break;
                 case 2:
                     screenClear();
@@ -166,6 +147,8 @@ void menu() {
                     printf("Instruções: A ser definido");
                     screenUpdate();
                     getchar();  
+                    screenClear();
+                    desenhaMoldura();
                     break;
                 case 3:
                     screenClear();
@@ -179,6 +162,8 @@ void menu() {
                     
                     screenUpdate();
                     getchar();  
+                    screenClear();
+                    desenhaMoldura();
                     break;
                 case 4:
                     screenClear();
