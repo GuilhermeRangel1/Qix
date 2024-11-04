@@ -48,11 +48,24 @@ void comeco() {
 
 int check_XY(int playerX, int playerY) {
     int n = 0;
-    if (playerX == MINX || playerX == MAXX - 1) {
-        n = 1;
+    
+    if (playerX == MAXX - 1 && playerY == MAXY) {
+        n = 6;
+    }
+    else if (playerX == MINX && playerY == MAXY) {
+        n = 5;
+    }
+    else if (playerX == MAXX -1 && playerY == 1) {
+        n = 4;
+    }
+    else if (playerX == MINX && playerY == 1) {
+        n = 3;
     }
     else if (playerY == MINY || playerY == MAXY) {
         n = 2;
+    }
+    else if (playerX == MINX || playerX == MAXX - 1) {
+        n = 1;
     }
     return n;
 }
@@ -60,11 +73,23 @@ int check_XY(int playerX, int playerY) {
 void mov(int proxX, int proxY) {
     screenSetColor(CYAN, BLACK); 
     screenGotoxy(player.x, player.y);
-    if (check_XY(player.x, player.y) == 2){
+    if (check_XY(player.x, player.y) == 1){
+        printf("║"); 
+    }
+    else if (check_XY(player.x, player.y) == 2){
         printf("═");
     }
-    else if (check_XY(player.x, player.y) == 1){
-        printf("║"); 
+    else if (check_XY(player.x, player.y) == 3){
+        printf("╔");
+    }
+    else if (check_XY(player.x, player.y) == 4){
+        printf("╗");
+    }
+    else if (check_XY(player.x, player.y) == 5){
+        printf("╚");
+    }
+    else if (check_XY(player.x, player.y) == 6){
+        printf("╝");
     }
     else if (check_XY(player.x, player.y) == 0){
         printf("*");
