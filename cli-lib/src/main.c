@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <time.h>
 #include "screen.h"
 #include "keyboard.h"
 #include "timer.h"
@@ -11,25 +12,31 @@ struct jogador {
     char personagem[2];
 };
 
-struct jogador player = {(MAXX / 2), (MAXY - 2), {'@', '\0'}}; 
+struct inimigo {
+    int x;
+    int y;
+    int incX;
+    int incY;
+    char personagem[2];
+};
+
+struct jogador player = {(MAXX / 2), (MAXY - 2), {'@', '\0'}};
+struct inimigo enemy = {2, 2, 1, 1, {'#', '\0'}};
 
 void desenhaMoldura() {
-    screenSetColor(CYAN, BLACK); 
-    
+    screenSetColor(CYAN, BLACK);
     for (int x = 0; x < MAXX; x++) {
         screenGotoxy(x, 0);
         printf("═");
         screenGotoxy(x, MAXY - 1);
         printf("═");
     }
-
     for (int y = 0; y < MAXY; y++) {
         screenGotoxy(0, y);
         printf("║");
         screenGotoxy(MAXX - 1, y);
         printf("║");
     }
-
     screenGotoxy(0, 0);
     printf("╔");
     screenGotoxy(MAXX - 1, 0);
@@ -41,37 +48,74 @@ void desenhaMoldura() {
 }
 
 void comeco() {
-    screenSetColor(CYAN, BLACK); 
-    screenGotoxy(player.x, player.y); 
+    screenSetColor(CYAN, BLACK);
+    screenGotoxy(player.x, player.y);
     printf("%s", player.personagem);
+
+    screenSetColor(RED, BLACK);
+    screenGotoxy(enemy.x, enemy.y);
+    printf("%s", enemy.personagem);
 }
 
 void mov(int proxX, int proxY) {
-    screenSetColor(BLACK, BLACK); 
+    screenSetColor(BLACK, BLACK);
     screenGotoxy(player.x, player.y);
-    printf(" "); 
+    printf(" ");
 
     player.x = proxX;
     player.y = proxY;
 
-    screenSetColor(CYAN, BLACK); 
+    screenSetColor(CYAN, BLACK);
     screenGotoxy(player.x, player.y);
     printf("%s", player.personagem);
 }
 
+void moverInimigo() {
+    screenSetColor(BLACK, BLACK);
+    screenGotoxy(enemy.x, enemy.y);
+    printf(" ");
+
+    
+    int newX = enemy.x + enemy.incX;
+    int newY = enemy.y + enemy.incY;
+
+    
+    if (newX >= MAXX - 2 || newX <= 1) {
+        enemy.incX = -enemy.incX;
+    }
+    if (newY >= MAXY - 2 || newY <= 1) {
+        enemy.incY = -enemy.incY;
+    }
+
+    
+    enemy.x += enemy.incX;
+    enemy.y += enemy.incY;
+
+    screenSetColor(RED, BLACK);
+    screenGotoxy(enemy.x, enemy.y);
+    printf("%s", enemy.personagem);
+}
+
+int verificarColisao() {
+    return (player.x == enemy.x && player.y == enemy.y);
+}
+
 void iniciarJogo() {
-    screenClear();  
-    desenhaMoldura(); 
-    comeco();  
+    screenClear();
+    desenhaMoldura();
+    comeco();
     screenUpdate();
 
     int ch = 0;
+    int inimigoTimer = 0;  
+    const int inimigoDelay = 1;  
+
     while (ch != 27) {  
         if (keyhit()) {
             ch = readch();
             switch (ch) {
                 case 119: 
-                    if (player.y - 1 > 1) { 
+                    if (player.y - 1 > 1) {
                         mov(player.x, player.y - 1);
                     }
                     break;
@@ -81,32 +125,53 @@ void iniciarJogo() {
                     }
                     break;
                 case 97: 
-                    if (player.x - 1 > 1) { 
+                    if (player.x - 1 > 1) {
                         mov(player.x - 1, player.y);
                     }
                     break;
                 case 100: 
-                    if (player.x + 1 < MAXX - 2) { 
+                    if (player.x + 1 < MAXX - 2) {
                         mov(player.x + 1, player.y);
                     }
                     break;
                 default:
                     break;
             }
-            screenUpdate();
         }
+
+        
+        if (timerTimeOver()) {  
+            if (inimigoTimer >= inimigoDelay) {
+                moverInimigo();
+                inimigoTimer = 0;  
+            } else {
+                inimigoTimer++;
+            }
+        }
+
+        
+        if (verificarColisao()) {
+            screenClear();
+            desenhaMoldura();
+            screenGotoxy(MAXX / 2 - 5, MAXY / 2);
+            printf("GAME OVER");
+            screenUpdate();
+            getchar();  
+            return;
+        }
+
+        screenUpdate();
     }
 }
 
 void menu() {
-    int opcao = 1; 
+    int opcao = 1;
     int tecla;
 
-    screenClear();  // Limpa a tela uma vez no início do menu
-    desenhaMoldura();  // Desenha a moldura uma vez no início do menu
+    screenClear();
+    desenhaMoldura();
 
     while (1) {
-        // Exibe o título e as opções do menu, atualizando apenas as opções
         screenSetColor(YELLOW, BLACK);
         screenGotoxy(MAXX / 2 - 3, 2);
         printf("QIX GAME");
@@ -127,13 +192,13 @@ void menu() {
 
         tecla = getchar();
 
-        if (tecla == 'w') {  
+        if (tecla == 'w') {
             opcao--;
-            if (opcao < 1) opcao = 4;  
-        } else if (tecla == 's') {  
+            if (opcao < 1) opcao = 4;
+        } else if (tecla == 's') {
             opcao++;
-            if (opcao > 4) opcao = 1;  
-        } else if (tecla == '\n') { 
+            if (opcao > 4) opcao = 1;
+        } else if (tecla == '\n') {
             switch (opcao) {
                 case 1:
                     iniciarJogo();
@@ -146,7 +211,7 @@ void menu() {
                     screenGotoxy(MAXX / 2 - 8, MAXY / 2);
                     printf("Instruções: A ser definido");
                     screenUpdate();
-                    getchar();  
+                    getchar();
                     screenClear();
                     desenhaMoldura();
                     break;
@@ -161,7 +226,7 @@ void menu() {
                     printf("Créditos: Antônio Laprovitera");
                     
                     screenUpdate();
-                    getchar();  
+                    getchar();
                     screenClear();
                     desenhaMoldura();
                     break;
@@ -171,17 +236,19 @@ void menu() {
                     screenGotoxy(MAXX / 2 - 8, MAXY / 2);
                     printf("Saindo do jogo...");
                     screenUpdate();
-                    return;  
+                    return;
             }
         }
     }
 }
 
 int main() {
+    srand(time(NULL));
     screenInit(1);
     keyboardInit();
-    
-    menu();  
+    timerInit(30);  
+
+    menu();
 
     keyboardDestroy();
     screenDestroy();
