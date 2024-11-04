@@ -39,6 +39,26 @@ void desenhaMoldura() {
     screenGotoxy(MAXX - 1, MAXY - 1);
     printf("╝");
 }
+
+void exibirOpcoesMenu(int opcaoSelecionada) {
+    screenSetColor(YELLOW, BLACK);  
+    screenGotoxy(MAXX / 2 - 3, 2); 
+    printf("QIX GAME");
+
+    
+    screenGotoxy(MAXX / 2 - 4, 5); 
+    printf("%sJOGAR", opcaoSelecionada == 1 ? "-> " : "   ");
+
+    screenGotoxy(MAXX / 2 - 7, 7); 
+    printf("%sINSTRUÇÕES", opcaoSelecionada == 2 ? "-> " : "   ");
+
+    screenGotoxy(MAXX / 2 - 6, 9); 
+    printf("%sCRÉDITOS", opcaoSelecionada == 3 ? "-> " : "   ");
+
+    screenGotoxy(MAXX / 2 - 4, 11); 
+    printf("%sSAIR", opcaoSelecionada == 4 ? "-> " : "   ");
+}
+
 void comeco() {
     screenSetColor(RED, BLACK); 
     screenGotoxy(player.x, player.y); 
@@ -77,7 +97,7 @@ void iniciarJogo() {
                     }
                     break;
                 case 115: 
-                    if (player.y + 1 < MAXY - 1) {
+                    if (player.y + 1 < MAXY - 2) {
                         mov(player.x, player.y + 1);
                     }
                     break;
@@ -103,10 +123,11 @@ void menu() {
     int opcao = 1; 
     int ch = 0;
 
-    screenClear();  
-    desenhaMoldura(); 
-
     while (1) {
+        screenClear();
+        desenhaMoldura();
+        
+        
         screenSetColor(YELLOW, BLACK);
         screenGotoxy(MAXX / 2 - 3, 2);
         printf("QIX GAME");
@@ -125,62 +146,47 @@ void menu() {
         
         screenUpdate();
 
-        
-        if (keyhit()) {
-            ch = readch(); 
+        tecla = getchar();
 
-            switch (ch) {
-                case 'w':  
-                    opcao--;
-                    if (opcao < 1) opcao = 4;  
+        if (tecla == 'w') {  
+            opcao--;
+            if (opcao < 1) opcao = 4;  
+        } else if (tecla == 's') {  
+            opcao++;
+            if (opcao > 4) opcao = 1;  
+        } else if (tecla == '\n') { 
+            switch (opcao) {
+                case 1:
+                    iniciarJogo();
                     break;
-                case 's':  
-                    opcao++;
-                    if (opcao > 4) opcao = 1;  
+                case 2:
+                    screenClear();
+                    desenhaMoldura();
+                    screenGotoxy(MAXX / 2 - 8, MAXY / 2);
+                    printf("Instruções: A ser definido");
+                    screenUpdate();
+                    getchar();  
                     break;
-                case '\n':  
-                    switch (opcao) {
-                        case 1:  
-                            iniciarJogo();
-                            screenClear();
-                            desenhaMoldura();
-                            break;
-                        case 2:  
-                            screenClear();
-                            desenhaMoldura();
-                            screenGotoxy(MAXX / 2 - 8, MAXY / 2);
-                            printf("Instruções: A ser definido");
-                            screenUpdate();
-                            readch();  
-                            screenClear();
-                            desenhaMoldura();
-                            break;
-                        case 3:  
-                            screenClear();
-                            desenhaMoldura();
-                                screenGotoxy(MAXX / 2 - 20, MAXY / 2);
-                                screenGotoxy((MAXX / 2) - (42 / 2), MAXY / 2);
-                                printf("Programador e Game Designer: Guilherme Vinícius");
-                                screenGotoxy((MAXX / 2) - (23 / 2), MAXY / 2 + 1);
-                                printf("Programador: Arthur Xavier");
-                                screenGotoxy((MAXX / 2) - (28 / 2), MAXY / 2 + 2);
-                                printf("Programador: Antônio Laprovitera");
-                                screenUpdate();
-                                readch();  
-                                screenClear();
-                                desenhaMoldura();
-                                break;
-                        case 4:  
-                            screenClear();
-                            desenhaMoldura();
-                            screenGotoxy(MAXX / 2 - 8, MAXY / 2);
-                            printf("Saindo do jogo...");
-                            screenUpdate();
-                            return; 
-                    }
+                case 3:
+                    screenClear();
+                    desenhaMoldura();
+                    screenGotoxy(MAXX / 2 - 8, MAXY / 2);
+                    printf("Créditos: Guilherme Vinícius");
+                    screenGotoxy(MAXX / 2 - 8, MAXY / 2 + 1);
+                    printf("Créditos: Arthur Xavier");
+                    screenGotoxy(MAXX / 2 - 8, MAXY / 2 + 2);
+                    printf("Créditos: Antônio Laprovitera");
+                    
+                    screenUpdate();
+                    getchar();  
                     break;
-                default:
-                    break;
+                case 4:
+                    screenClear();
+                    desenhaMoldura();
+                    screenGotoxy(MAXX / 2 - 8, MAXY / 2);
+                    printf("Saindo do jogo...");
+                    screenUpdate();
+                    return;  
             }
         }
     }
