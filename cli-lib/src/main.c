@@ -169,25 +169,27 @@ void iniciarJogo() {
 void menu() {
     int opcao = 1; 
     int ch = 0;
+    int tituloY = MAXY / 6;  
+    int primeiraOpcaoY = (MAXY / 6) * 2;  
 
     screenClear();  
     desenhaMoldura(); 
 
     while (1) {
         screenSetColor(YELLOW, BLACK);
-        screenGotoxy(MAXX / 2 - 3, 2);
+        screenGotoxy(MAXX / 2 - 3, tituloY);
         printf("QIX GAME");
 
-        screenGotoxy(MAXX / 2 - 4, 5);
+        screenGotoxy(MAXX / 2 - 4, primeiraOpcaoY);
         printf("%sJOGAR", opcao == 1 ? "-> " : "   ");
 
-        screenGotoxy(MAXX / 2 - 7, 7);
+        screenGotoxy(MAXX / 2 - 7, primeiraOpcaoY + 2);
         printf("%sINSTRUÇÕES", opcao == 2 ? "-> " : "   ");
 
-        screenGotoxy(MAXX / 2 - 6, 9);
+        screenGotoxy(MAXX / 2 - 6, primeiraOpcaoY + 4);
         printf("%sCRÉDITOS", opcao == 3 ? "-> " : "   ");
 
-        screenGotoxy(MAXX / 2 - 4, 11);
+        screenGotoxy(MAXX / 2 - 4, primeiraOpcaoY + 6);
         printf("%sSAIR", opcao == 4 ? "-> " : "   ");
         
         screenUpdate();
@@ -224,7 +226,6 @@ void menu() {
                         case 3: 
                             screenClear();
                             desenhaMoldura();
-                            screenGotoxy(MAXX / 2 - 8, MAXY / 2);
                             screenGotoxy((MAXX / 2) - (42 / 2), MAXY / 2);
                             printf("Programador e Game Designer: Guilherme Vinícius");
                             screenGotoxy((MAXX / 2) - (23 / 2), MAXY / 2 + 1);
