@@ -48,8 +48,8 @@
 #define SCRSTARTY      1
 #define SCRENDY        23
 
-#define MINX           1      // min screen horizontal pos
-#define MINY           1      // min screen vertical pos
+#define MINX           0      // min screen horizontal pos
+#define MINY           0      // min screen vertical pos
 #define MAXX           160     // max screen horizontal pos
 #define MAXY           48     // max screen vertical pos
 

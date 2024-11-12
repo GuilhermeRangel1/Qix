@@ -19,31 +19,66 @@ struct inimigo {
     char personagem[2];
 };
 
+struct grid {
+    int x;
+    int y;
+    char exib[2];
+    int borda;
+};
+
 struct jogador player = {(MAXX / 2), (MAXY - 2), {'@', '\0'}};
 struct inimigo enemy = {2, 2, 1, 1, {'#', '\0'}};
+struct grid matriz[MAXY][MAXX];
+
+int verificarBordaParaPLayer() {
+    if (strcmp(matriz[player.y][player.x].exib, "═") == 0 ||
+        strcmp(matriz[player.y][player.x].exib, "║") == 0 ||
+        strcmp(matriz[player.y][player.x].exib, "╔") == 0 ||
+        strcmp(matriz[player.y][player.x].exib, "╗") == 0 ||
+        strcmp(matriz[player.y][player.x].exib, "╚") == 0 ||
+        strcmp(matriz[player.y][player.x].exib, "╝") == 0 ||
+        strcmp(matriz[player.y][player.x].exib, "*") == 0) {
+            return 1;
+    } 
+    else{
+        return 0;
+    }
+}
+
+
 
 void desenhaMoldura() {
     screenSetColor(CYAN, BLACK);
-    for (int x = 0; x < MAXX; x++) {
-        screenGotoxy(x, 0);
-        printf("═");
-        screenGotoxy(x, MAXY);
-        printf("═");
+    char exib[4];
+    for (int i = MINY + 1; i < MAXY; i++) {
+        for (int j = MINX + 1; j < MAXX; j++) {
+            screenGotoxy(j, i);
+            
+            if (i == MINY + 1) {
+                if (j == MINX + 1) strcpy(exib, "╔");
+                else if (j == MAXX - 1) strcpy(exib, "╗");  
+                else {strcpy(exib, "═");
+                }
+                printf("%s", exib);
+                strcpy(matriz[i][j].exib, exib);
+            
+            } else if (MINY + 1< i && i < MAXY - 1) {
+                if (j == MINX + 1 || j == MAXX - 1)  {
+                    strcpy(exib, "║");
+                    printf("%s", exib);
+                    strcpy(matriz[i][j].exib, exib);
+                }
+            } else if (i == MAXY - 1) {
+                if (j == MINX + 1) strcpy(exib, "╚");
+                else if (j == MAXX - 1) strcpy(exib, "╝");  
+                else {strcpy(exib, "═");
+                }
+                printf("%s", exib);
+                strcpy(matriz[i][j].exib, exib);
+            } 
+            
+        }
     }
-    for (int y = 0; y < MAXY; y++) {
-        screenGotoxy(0, y);
-        printf("║");
-        screenGotoxy(MAXX, y);
-        printf("║");
-    }
-    screenGotoxy(0, 0);
-    printf("╔");
-    screenGotoxy(MAXX, 0);
-    printf("╗");
-    screenGotoxy(0, MAXY);
-    printf("╚");
-    screenGotoxy(MAXX, MAXY);
-    printf("╝");
 }
 
 void comeco() {
@@ -59,7 +94,17 @@ void comeco() {
 void mov(int proxX, int proxY) {
     screenSetColor(YELLOW, BLACK);
     screenGotoxy(player.x, player.y);
-    printf("*");
+    if (verificarBordaParaPLayer() == 1){
+        screenSetColor(CYAN, BLACK);
+        printf("%s", matriz[player.y][player.x].exib);
+    }
+    else {
+        printf("a");
+        strcpy(matriz[player.y][player.x].exib, "a");
+    }
+    
+
+    
 
     player.x = proxX;
     player.y = proxY;
@@ -67,34 +112,56 @@ void mov(int proxX, int proxY) {
     screenSetColor(WHITE, WHITE);
     screenGotoxy(player.x, player.y);
     printf("%s", player.personagem);
+    
+}
+int colisaoRastro(int x, int y) {
+    if (strcmp(matriz[y][x].exib, "*") == 0) {
+        return 1;
+    }
+    else {
+        return 0;
+    }
+}
+
+int verificarColisao() {
+    return (player.x == enemy.x && player.y == enemy.y || strcmp(matriz[enemy.y + enemy.incY][enemy.x + enemy.incX].exib, "*") == 0);
 }
 
 void moverInimigo() {
     screenSetColor(BLACK, BLACK);
     screenGotoxy(enemy.x, enemy.y);
     printf(" ");
+    strcpy(matriz[enemy.y][enemy.x].exib, " ");
 
     int newX = enemy.x + enemy.incX;
     int newY = enemy.y + enemy.incY;
 
-    if (newX >= MAXX - 1 || newX <= 1) {
+    if (strcmp(matriz[newY][newX].exib, "║") == 0 || strcmp(matriz[newY][newX].exib, "a") == 0) {
         enemy.incX = -enemy.incX;
     }
-    if (newY >= MAXY || newY <= 1) {
+    if (strcmp(matriz[newY][newX].exib, "═") == 0 || strcmp(matriz[newY][newX].exib, "a") == 0) {
         enemy.incY = -enemy.incY;
     }
-
+    if (strcmp(matriz[newY][newX].exib, "╔") == 0 || 
+        strcmp(matriz[newY][newX].exib, "╗") == 0 ||
+        strcmp(matriz[newY][newX].exib, "╚") == 0 ||
+        strcmp(matriz[newY][newX].exib, "╝") == 0 ) {
+        enemy.incX = -enemy.incX;
+        enemy.incY = -enemy.incY;
+    }
+    verificarColisao();
     enemy.x += enemy.incX;
     enemy.y += enemy.incY;
+    
+   
 
     screenSetColor(RED, BLACK);
     screenGotoxy(enemy.x, enemy.y);
     printf("%s", enemy.personagem);
+    strcpy(matriz[enemy.y][enemy.x].exib, enemy.personagem);
 }
 
-int verificarColisao() {
-    return (player.x == enemy.x && player.y == enemy.y);
-}
+
 
 void iniciarJogo() {
     player.x = MAXX / 2;
@@ -116,22 +183,22 @@ void iniciarJogo() {
             ch = readch();
             switch (ch) {
                 case 119: 
-                    if (player.y - 1 > 1) {
+                    if (player.y  > 1) {
                         mov(player.x, player.y - 1);
                     }
                     break;
                 case 115: 
-                    if (player.y + 1 < MAXY) {
+                    if (player.y < MAXY - 1) {
                         mov(player.x, player.y + 1);
                     }
                     break;
                 case 97: 
-                    if (player.x - 1 > 1) {
+                    if (player.x > 1) {
                         mov(player.x - 1, player.y);
                     }
                     break;
-                case 100: 
-                    if (player.x + 1 < MAXX - 1) {
+                case 100:  
+                    if (player.x  < MAXX - 1) {
                         mov(player.x + 1, player.y);
                     }
                     break;
@@ -254,6 +321,11 @@ void menu() {
 }
 
 int main() {
+    for (int i = MINY + 1; i <= MAXY - 1; i++){
+        for (int j = MINX + 1; j <= MAXX - 1; j++) {
+            strcpy(matriz[i][j].exib, " ");
+        }
+    }
     screenInit(1);
     keyboardInit();
     timerInit(30);  
