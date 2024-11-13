@@ -4,7 +4,10 @@
 #include "screen.h"
 #include "keyboard.h"
 #include "timer.h"
-
+#define MAXX 160
+#define MAXY 48
+#define MINX 0 
+#define MINY 0
 struct jogador {
     int x;
     int y;
@@ -29,6 +32,14 @@ struct grid {
 struct jogador player = {(MAXX / 2), (MAXY - 2), {'@', '\0'}};
 struct inimigo enemy = {2, 2, 1, 1, {'#', '\0'}};
 struct grid matriz[MAXY][MAXX];
+
+void iniciarMatriz(){
+    for (int i = MINY + 1; i <= MAXY - 1; i++){
+        for (int j = MINX + 1; j <= MAXX - 1; j++) {
+            strcpy(matriz[i][j].exib, " ");
+        }
+    }
+}
 
 int verificarBordaParaPLayer() {
     if (strcmp(matriz[player.y][player.x].exib, "═") == 0 ||
@@ -99,13 +110,10 @@ void mov(int proxX, int proxY) {
         printf("%s", matriz[player.y][player.x].exib);
     }
     else {
-        printf("a");
-        strcpy(matriz[player.y][player.x].exib, "a");
+        printf("*");
+        strcpy(matriz[player.y][player.x].exib, "*");
     }
     
-
-    
-
     player.x = proxX;
     player.y = proxY;
 
@@ -136,10 +144,10 @@ void moverInimigo() {
     int newX = enemy.x + enemy.incX;
     int newY = enemy.y + enemy.incY;
 
-    if (strcmp(matriz[newY][newX].exib, "║") == 0 || strcmp(matriz[newY][newX].exib, "a") == 0) {
+    if (strcmp(matriz[newY][newX].exib, "║") == 0 || strcmp(matriz[newY][newX].exib, "*") == 0) {
         enemy.incX = -enemy.incX;
     }
-    if (strcmp(matriz[newY][newX].exib, "═") == 0 || strcmp(matriz[newY][newX].exib, "a") == 0) {
+    if (strcmp(matriz[newY][newX].exib, "═") == 0 || strcmp(matriz[newY][newX].exib, "*") == 0) {
         enemy.incY = -enemy.incY;
     }
     if (strcmp(matriz[newY][newX].exib, "╔") == 0 || 
@@ -276,6 +284,7 @@ void menu() {
                 case '\n':  
                     switch (opcao) {
                         case 1: 
+                            iniciarMatriz();
                             iniciarJogo();
                             screenClear();
                             desenhaMoldura();
@@ -321,11 +330,7 @@ void menu() {
 }
 
 int main() {
-    for (int i = MINY + 1; i <= MAXY - 1; i++){
-        for (int j = MINX + 1; j <= MAXX - 1; j++) {
-            strcpy(matriz[i][j].exib, " ");
-        }
-    }
+    iniciarMatriz();
     screenInit(1);
     keyboardInit();
     timerInit(30);  
