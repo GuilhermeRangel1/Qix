@@ -20,6 +20,7 @@ struct inimigo {
     int y;
     int incX;
     int incY;
+    int tipoMovimento;  
     char matriz[5][5];  
 };
 
@@ -31,7 +32,7 @@ struct grid {
 };
 
 struct jogador player = {(MAXX / 2), (MAXY - 2), {'@', '\0'}};
-struct inimigo enemy = {2, 2, 2, 2, {
+struct inimigo enemy = {2, 2, 2, 2, 0, {  
     {'#', '#', '#', '#', '#'},
     {'#', ' ', ' ', ' ', '#'},
     {'#', ' ', ' ', ' ', '#'},
@@ -39,6 +40,9 @@ struct inimigo enemy = {2, 2, 2, 2, {
     {'#', '#', '#', '#', '#'}
 }};
 struct grid matriz[MAXY][MAXX];
+
+
+void iniciarJogo();
 
 void iniciarMatriz() {
     for (int i = MINY + 2; i < MAXY - 1; i++) {  
@@ -165,16 +169,14 @@ void verificarcolisaoinimigo() {
         }
     }
 }
+
 int verificarColisaoRastroNaMatriz() {
-    
     for (int i = 0; i < 5; i++) {
         for (int j = 0; j < 5; j++) {
             int posX = enemy.x + j;
             int posY = enemy.y + i;
 
-            
             if (posX >= 0 && posX < MAXX && posY >= 0 && posY < MAXY) {
-                
                 if (strcmp(matriz[posY][posX].exib, "*") == 0 && enemy.matriz[i][j] == '#') {
                     return 1;  
                 }
@@ -184,11 +186,15 @@ int verificarColisaoRastroNaMatriz() {
     return 0;  
 }
 
-
-
-
 void moverInimigo() {
+    static int contadorMovimento = 0;
+
     
+    if (contadorMovimento++ >= 100) {  
+        enemy.tipoMovimento = (enemy.tipoMovimento + 1) % 3;  
+        contadorMovimento = 0;
+    }
+
     if (verificarColisaoRastroNaMatriz()) {
         screenClear();
         desenhaMoldura();
@@ -196,7 +202,6 @@ void moverInimigo() {
         printf("GAME OVER");
         screenUpdate();
 
-        
         while (1) {
             if (keyhit()) {
                 int ch = readch();
@@ -209,22 +214,94 @@ void moverInimigo() {
 
     apagarInimigo();
 
-    int newX = enemy.x + enemy.incX;
-    int newY = enemy.y + enemy.incY;
+    if (enemy.tipoMovimento == 0) {  
+        int newX = enemy.x + enemy.incX;
+        int newY = enemy.y + enemy.incY;
 
-    
-    if (newX <= MINX + 1 || newX >= MAXX - 5) {
-        enemy.incX = -enemy.incX;  
+        if (newX <= MINX + 1 || newX >= MAXX - 5) {
+            enemy.incX = -enemy.incX;  
+        }
+        if (newY <= MINY + 1 || newY >= MAXY - 5) {
+            enemy.incY = -enemy.incY;  
+        }
+
+        enemy.x += enemy.incX;
+        enemy.y += enemy.incY;
+        
+    } else if (enemy.tipoMovimento == 1) {  
+        static int passosRestantes = 0;
+
+        if (passosRestantes <= 0) {
+            enemy.incX = (rand() % 3) - 1;  
+            enemy.incY = (rand() % 3) - 1;  
+
+            if (enemy.incX == 0 && enemy.incY == 0) {
+                enemy.incX = 1;  
+            }
+
+            passosRestantes = (rand() % 10) + 5;  
+        }
+
+        enemy.x += enemy.incX;
+        enemy.y += enemy.incY;
+
+        passosRestantes--;
+
+        if (enemy.x <= MINX + 1) {
+            enemy.x = MINX + 2;
+            enemy.incX = 1;
+            passosRestantes = 5;
+        }
+        if (enemy.x >= MAXX - 5) {
+            enemy.x = MAXX - 6;
+            enemy.incX = -1;
+            passosRestantes = 5;
+        }
+        if (enemy.y <= MINY + 1) {
+            enemy.y = MINY + 2;
+            enemy.incY = 1;
+            passosRestantes = 5;
+        }
+        if (enemy.y >= MAXY - 5) {
+            enemy.y = MAXY - 6;
+            enemy.incY = -1;
+            passosRestantes = 5;
+        }
+
+    } else if (enemy.tipoMovimento == 2) {  
+        
+        if (player.x > enemy.x) {
+            enemy.incX = 1;  
+        } else if (player.x < enemy.x) {
+            enemy.incX = -1;  
+        } else {
+            enemy.incX = 0;  
+        }
+
+        if (player.y > enemy.y) {
+            enemy.incY = 1;  
+        } else if (player.y < enemy.y) {
+            enemy.incY = -1;  
+        } else {
+            enemy.incY = 0;  
+        }
+
+      
+        int newX = enemy.x + enemy.incX;
+        int newY = enemy.y + enemy.incY;
+
+       
+        if (newX <= MINX + 1 || newX >= MAXX - 5) {
+            enemy.incX = -enemy.incX;
+        }
+        if (newY <= MINY + 1 || newY >= MAXY - 5) {
+            enemy.incY = -enemy.incY;
+        }
+
+        enemy.x += enemy.incX;
+        enemy.y += enemy.incY;
     }
-    if (newY <= MINY + 1 || newY >= MAXY - 5) {
-        enemy.incY = -enemy.incY;  
-    }
 
-    
-    enemy.x += enemy.incX;
-    enemy.y += enemy.incY;
-
-    
     if (verificarColisaoRastroNaMatriz()) {
         screenClear();
         desenhaMoldura();
@@ -232,12 +309,11 @@ void moverInimigo() {
         printf("GAME OVER");
         screenUpdate();
 
-        
         while (1) {
             if (keyhit()) {
                 int ch = readch();
                 if (ch == '\n' || ch == 27) {
-                    return;  
+                    return;
                 }
             }
         }
@@ -245,6 +321,9 @@ void moverInimigo() {
 
     desenhaInimigo();
 }
+
+
+
 
 
 
@@ -297,26 +376,7 @@ void iniciarJogo() {
             timerUpdateTimer(inimigoDelay);
         }
 
-        
-        if (verificarColisaoRastroNaMatriz()) {
-            screenClear();
-            desenhaMoldura();
-            screenGotoxy(MAXX / 2 - 5, MAXY / 2);
-            printf("GAME OVER");
-            screenUpdate();
-
-            while (1) {
-                if (keyhit()) {
-                    ch = readch();
-                    if (ch == '\n' || ch == 27) {
-                        return;
-                    }
-                }
-            }
-        }
-
-        
-        if (verificarColisao()) {
+        if (verificarColisaoRastroNaMatriz() || verificarColisao()) {
             screenClear();
             desenhaMoldura();
             screenGotoxy(MAXX / 2 - 5, MAXY / 2);
@@ -336,7 +396,6 @@ void iniciarJogo() {
         screenUpdate();
     }
 }
-
 
 void menu() {
     int opcao = 1; 
