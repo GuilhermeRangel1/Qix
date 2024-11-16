@@ -503,7 +503,7 @@ void moverInimigo() {
         int newX = enemy.x + enemy.incX;
         int newY = enemy.y + enemy.incY;
 
-        // Verificação de colisões
+        
         if (newX <= MINX + 1 || newX >= MAXX - 5 || strcmp(matriz[newY][newX].exib, "O") == 0) {
             enemy.incX = -enemy.incX;  
         }
@@ -536,7 +536,7 @@ void moverInimigo() {
         int newX = enemy.x + enemy.incX;
         int newY = enemy.y + enemy.incY;
 
-        // Verificação de colisões
+        
         if (newX <= MINX + 1 || newX >= MAXX - 5 || strcmp(matriz[newY][newX].exib, "O") == 0) {
             enemy.incX = -enemy.incX;  
         }
