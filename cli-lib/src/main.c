@@ -58,9 +58,9 @@ struct inimigo enemy = {2, 2, 2, 2, 0, {
 struct grid matriz[MAXY][MAXX];
 
 
-char bordaInterna [2] = "a";
-char preenchimento [2] = "$";
-int total = ((MAXX -2) * (MAXY-2))*(75/100); 
+char bordaInterna [2] = "O";
+char preenchimento [2] = "#";
+int total = ((MAXX - 2) * (MAXY - 2) * 75) / 100; 
 
 int contador(char *caractere) {
     int count = 0;
@@ -148,7 +148,7 @@ void liberarLista(struct no* head) {
 
 void vitoria(struct no** head) {
     end = time(NULL);
-    double tempo = difftime(end, start);
+    double tempo = difftime(end, start); 
     screenClear();
     screenSetColor(GREEN, BLACK);
     screenGotoxy(MAXX / 2 - 5, MAXY / 2 - 1);
@@ -180,7 +180,7 @@ void vitoria(struct no** head) {
             i++;  
         }
     }
-    nome[i] = '\0';  
+    nome[i] = '\0'; 
 
     screenClear();
     screenGotoxy(MAXX / 2 - 5, MAXY / 2 + 1);
@@ -211,7 +211,7 @@ int verificarBordaParaPLayer() {
         strcmp(matriz[player.y][player.x].exib, "╗") == 0 ||
         strcmp(matriz[player.y][player.x].exib, "╚") == 0 ||
         strcmp(matriz[player.y][player.x].exib, "╝") == 0 ||
-        strcmp(matriz[player.y][player.x].exib, "a") == 0) {
+        strcmp(matriz[player.y][player.x].exib, "O") == 0) {
         return 1;
     } else {
         return 0;
@@ -320,9 +320,9 @@ void preencher (struct node** head) {
             
             if (checkAst){
                 while(strcmp(matriz[i][j].exib, "*") != 0 && j < MAXX) {
-                    strcpy(matriz[i][j].exib, "&");
+                    strcpy(matriz[i][j].exib, "#");
                     screenGotoxy(j, i);
-                    printf("&");
+                    printf("#");
                     j++;
                 }
             }   
@@ -334,8 +334,8 @@ void preencher (struct node** head) {
     current = *head;
     while (current != NULL) {  
         screenGotoxy(current->x, current->y);
-        printf("a");
-        strcpy(matriz[current->y][current->x].exib, "a");
+        printf("O");
+        strcpy(matriz[current->y][current->x].exib, "O");
         current = current->next;  
     }
 
@@ -477,10 +477,10 @@ void moverInimigo() {
         int newX = enemy.x + enemy.incX;
         int newY = enemy.y + enemy.incY;
 
-        if (newX <= MINX + 1 || newX >= MAXX - 5 || strcmp(matriz[newY][newX].exib, "a") == 0) {
+        if (newX <= MINX + 1 || newX >= MAXX - 5 || strcmp(matriz[newY][newX].exib, "O") == 0) {
             enemy.incX = -enemy.incX;  
         }
-        if (newY <= MINY + 1 || newY >= MAXY - 5 || strcmp(matriz[newY][newX].exib, "a") == 0) {
+        if (newY <= MINY + 1 || newY >= MAXY - 5 || strcmp(matriz[newY][newX].exib, "O") == 0) {
             enemy.incY = -enemy.incY;  
         }
 
@@ -611,8 +611,8 @@ void exibirScoreboard() {
 
 void iniciarJogo() {
     start = time(NULL);
-    player.x = MAXX / 2;
-    player.y = MAXY - 1;
+    player.x = 1;
+    player.y = MAXY /2;
     enemy.x = 2;
     enemy.y = 2;
     screenClear();
@@ -653,7 +653,7 @@ void iniciarJogo() {
                     break;
             }
         }
-/*         
+         
         if((contador(bordaInterna)+ contador(preenchimento)) > total){
             struct no* head = NULL;
             lerScores(&head);
@@ -668,7 +668,7 @@ void iniciarJogo() {
                 }
             }
         } 
-*/
+
         if (timerTimeOver()) {  
             moverInimigo();
             timerUpdateTimer(inimigoDelay);
