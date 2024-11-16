@@ -4,10 +4,14 @@
 #include "screen.h"
 #include "keyboard.h"
 #include "timer.h"
+#include <time.h> 
+
 #define MAXX 160
 #define MAXY 48
-#define MINX 0 
+#define MINX 0
 #define MINY 0
+
+time_t start, end;
 
 struct jogador {
     int x;
@@ -31,6 +35,18 @@ struct grid {
     int borda;
 };
 
+struct node {
+    int x;
+    int y;
+    struct node *next;
+};
+
+struct no {
+    char nome[5];
+    double tempo;
+    struct no *proximo;
+};
+
 struct jogador player = {(MAXX / 2), (MAXY - 2), {'@', '\0'}};
 struct inimigo enemy = {2, 2, 2, 2, 0, {  
     {'#', '#', '#', '#', '#'},
@@ -41,8 +57,145 @@ struct inimigo enemy = {2, 2, 2, 2, 0, {
 }};
 struct grid matriz[MAXY][MAXX];
 
+/*
+char bordaInterna [2] = "a";
+char preenchimento [2] = "$";
+int total = ((MAXX -2) * (MAXY-2))*(75/100); 
 
-void iniciarJogo();
+int contador(char *caractere) {
+    int count = 0;
+    
+    for (int i = MINY + 1; i < MAXY - 1; i++) {  
+        for (int j = MINX + 1; j < MAXX - 1; j++) {
+            if (strcmp(matriz[i][j].exib, caractere) == 0) {
+                count++;  
+            }
+        }
+    }
+
+    return count;
+}
+*/
+
+struct no* criarNo(char* nome, double tempo) {
+    struct no* novoNo = (struct no*)malloc(sizeof(struct no));
+    if (novoNo == NULL) {
+        printf("Erro ao alocar memória para o nó.\n");
+        return NULL;
+    }
+    strncpy(novoNo->nome, nome, 5);
+    novoNo->tempo = tempo;
+    novoNo->proximo = NULL;
+    return novoNo;
+}
+
+void inserirOrdenado(struct no** head, char* nome, double tempo) {
+    struct no* novoNo = criarNo(nome, tempo);
+    if (novoNo == NULL) return;
+
+    if (*head == NULL || (*head)->tempo > tempo) {
+        
+        novoNo->proximo = *head;
+        *head = novoNo;
+    } else {
+       
+        struct no* atual = *head;
+        while (atual->proximo != NULL && atual->proximo->tempo <= tempo) {
+            atual = atual->proximo;
+        }
+        novoNo->proximo = atual->proximo;
+        atual->proximo = novoNo;
+    }
+}
+
+void lerScores(struct no** head) {
+    FILE* arquivo = fopen("scoreboard.txt", "r");
+    if (arquivo != NULL) {
+        char nome[5];
+        double tempo;
+        while (fscanf(arquivo, "%s %lf", nome, &tempo) == 2) {
+            inserirOrdenado(head, nome, tempo);
+        }
+        fclose(arquivo);
+    } else {
+        printf("Erro ao abrir o arquivo para leitura.\n");
+    }
+}
+
+void salvarScores(struct no* head) {
+    FILE* arquivo = fopen("scoreboard.txt", "w"); 
+    if (arquivo != NULL) {
+        struct no* atual = head;
+        while (atual != NULL) {
+            fprintf(arquivo, "%s %.2f\n", atual->nome, atual->tempo);
+            atual = atual->proximo;
+        }
+        fclose(arquivo);
+    } else {
+        printf("Erro ao abrir o arquivo para salvar os scores.\n");
+    }
+}
+
+void liberarLista(struct no* head) {
+    struct no* atual = head;
+    while (atual != NULL) {
+        struct no* temp = atual;
+        atual = atual->proximo;
+        free(temp);
+    }
+}
+
+
+void vitoria(struct no** head) {
+    screenClear();
+    screenSetColor(GREEN, BLACK);
+    screenGotoxy(MAXX / 2 - 5, MAXY / 2 - 1);
+    printf("Você ganhou!");
+    screenUpdate();
+
+    while (getchar() != '\n') {}
+
+    screenClear();
+    screenSetColor(WHITE, BLACK);
+    screenGotoxy(MAXX / 2 - 8, MAXY / 2);
+    printf("DIGITE SEU APELIDO:");
+    screenUpdate();
+
+    char nome[5] = "";  
+    int i = 0;
+
+    while (i < 4) {
+        char ch = getchar(); 
+        if (ch == 27) {  
+            break;
+        }
+
+        if (ch != '\n' && ch != '\r') {  
+            nome[i] = ch;  
+            screenGotoxy(MAXX / 2 + i, MAXY / 2 + 1);
+            printf("%c", ch);  
+            screenUpdate();
+            i++;  
+        }
+    }
+    nome[i] = '\0'; 
+
+    end = time(NULL);
+    double tempo = difftime(end, start); 
+
+    screenClear();
+    screenGotoxy(MAXX / 2 - 5, MAXY / 2 + 1);
+    printf("Nome: %s | Tempo: %.2f segundos", nome, tempo);  
+    screenUpdate();
+
+    inserirOrdenado(head, nome, tempo);
+
+    salvarScores(*head);
+
+    while (getchar() != '\n') {} 
+}
+
+
 
 void iniciarMatriz() {
     for (int i = MINY + 2; i < MAXY - 1; i++) {  
@@ -59,7 +212,7 @@ int verificarBordaParaPLayer() {
         strcmp(matriz[player.y][player.x].exib, "╗") == 0 ||
         strcmp(matriz[player.y][player.x].exib, "╚") == 0 ||
         strcmp(matriz[player.y][player.x].exib, "╝") == 0 ||
-        strcmp(matriz[player.y][player.x].exib, "*") == 0) {
+        strcmp(matriz[player.y][player.x].exib, "a") == 0) {
         return 1;
     } else {
         return 0;
@@ -132,15 +285,120 @@ void comeco() {
     desenhaInimigo();
 }
 
+void preencher (struct node** head) {
+    struct node* current = *head;  
+
+    for (int i = MINY + 1; i < MAXY; i++) {
+        int j = MINX + 1;
+        int flag = 0;
+
+        while (current != NULL) {
+            if (i != current->y) {
+                current = current->next;
+            } else {
+                flag = 1;
+                break;  
+            }
+        }
+
+        if (flag == 1) {
+            int dif = 0;
+            int checkAst = 0;
+            while(strcmp(matriz[i][j].exib, " ") != 0 && j < MAXX) {
+                j++; 
+            } 
+            while(j < MAXX) {
+                if (strcmp(matriz[i][j].exib, "*") == 0) {
+                    checkAst = 1;
+                    break;
+                }
+                else {
+                    j++;
+                    dif++;
+                }            
+            }
+            j = j - dif;
+            
+            if (checkAst){
+                while(strcmp(matriz[i][j].exib, "*") != 0 && j < MAXX) {
+                    strcpy(matriz[i][j].exib, "&");
+                    screenGotoxy(j, i);
+                    printf("&");
+                    j++;
+                }
+            }   
+        }
+        current = *head;
+    }
+
+    
+    current = *head;
+    while (current != NULL) {  
+        screenGotoxy(current->x, current->y);
+        printf("a");
+        strcpy(matriz[current->y][current->x].exib, "a");
+        current = current->next;  
+    }
+
+    
+    struct node* proximo;
+    current = *head;
+    while (current != NULL) {
+        proximo = current->next; 
+        free(current);           
+        current = proximo;       
+    }
+    *head = NULL;  
+}
+
+
+void add (struct node ** head, int x, int y){
+    struct node* newNode = (struct node*)malloc(sizeof(struct node));
+    newNode->x = x;
+    newNode->y = y;
+    newNode->next = NULL;
+
+    if (*head == NULL) {
+        *head = newNode;
+        return;
+    }
+
+    struct node* temp = *head;
+    while (temp->next != NULL) {
+        temp = temp->next;
+    }
+
+    temp->next = newNode;
+}
+
+void printList(struct node* head) {
+    struct node* current = head;  
+    if (current == NULL) {
+        printf("A lista está vazia.\n");
+        return;
+    }
+
+    printf("Lista encadeada: ");
+    while (current != NULL) {
+        printf("x = %d y = %d -> ", current->x, current->y);  
+        current = current->next;         
+    }
+    printf("NULL\n");  
+}
+
+struct node *head = NULL;
 void mov(int proxX, int proxY) {
     screenSetColor(YELLOW, BLACK);
     screenGotoxy(player.x, player.y);
     if (verificarBordaParaPLayer() == 1) {
         screenSetColor(CYAN, BLACK);
         printf("%s", matriz[player.y][player.x].exib);
+        preencher(&head);
     } else {
         printf("*");
         strcpy(matriz[player.y][player.x].exib, "*");
+        add(&head, player.x, player.y);
+        
     }
     
     player.x = proxX;
@@ -149,6 +407,8 @@ void mov(int proxX, int proxY) {
     screenSetColor(WHITE, WHITE);
     screenGotoxy(player.x, player.y);
     printf("%s", player.personagem);
+    screenGotoxy(MINX + 10,  MAXY);
+    screenGotoxy(player.x, player.y);
 }
 
 int verificarColisao() {
@@ -218,10 +478,10 @@ void moverInimigo() {
         int newX = enemy.x + enemy.incX;
         int newY = enemy.y + enemy.incY;
 
-        if (newX <= MINX + 1 || newX >= MAXX - 5) {
+        if (newX <= MINX + 1 || newX >= MAXX - 5 || strcmp(matriz[newY][newX].exib, "a") == 0) {
             enemy.incX = -enemy.incX;  
         }
-        if (newY <= MINY + 1 || newY >= MAXY - 5) {
+        if (newY <= MINY + 1 || newY >= MAXY - 5 || strcmp(matriz[newY][newX].exib, "a") == 0) {
             enemy.incY = -enemy.incY;  
         }
 
@@ -301,7 +561,6 @@ void moverInimigo() {
         enemy.x += enemy.incX;
         enemy.y += enemy.incY;
     }
-
     if (verificarColisaoRastroNaMatriz()) {
         screenClear();
         desenhaMoldura();
@@ -322,12 +581,37 @@ void moverInimigo() {
     desenhaInimigo();
 }
 
+void exibirScoreboard() {
+    FILE* arquivo = fopen("scoreboard.txt", "r");
+    if (arquivo == NULL) {
+        printf("Erro ao abrir o arquivo scoreboard.txt.\n");
+        return;
+    }
 
+    screenClear();
+    desenhaMoldura();
 
+    screenGotoxy((MAXX / 2) - (12 / 2), 2);
+    printf("===== TOP SCOREBOARD =====");
 
+    char nome[5];
+    double tempo;
+    int linha = 4;
 
+    while (fscanf(arquivo, "%s %lf", nome, &tempo) == 2) {
+        screenGotoxy((MAXX / 2), linha);  
+        printf("%s - %.2f", nome, tempo);
+        linha++;
+    }
+    fclose(arquivo);
+    screenUpdate();
+    getchar(); 
+    screenClear();
+    desenhaMoldura();
+}
 
 void iniciarJogo() {
+    start = time(NULL);
     player.x = MAXX / 2;
     player.y = MAXY - 1;
     enemy.x = 2;
@@ -370,7 +654,22 @@ void iniciarJogo() {
                     break;
             }
         }
-
+/*         
+        if((contador(bordaInterna)+ contador(preenchimento)) > total){
+            struct no* head = NULL;
+            lerScores(&head);
+            vitoria(&head);
+            liberarLista(head);
+                        while (1) {
+                if (keyhit()) {
+                    ch = readch();
+                    if (ch == '\n' || ch == 27) {
+                        return;
+                    }
+                }
+            }
+        } 
+*/
         if (timerTimeOver()) {  
             moverInimigo();
             timerUpdateTimer(inimigoDelay);
@@ -398,16 +697,15 @@ void iniciarJogo() {
 }
 
 void menu() {
-    int opcao = 1; 
+    int opcao = 1;
     int ch = 0;
     int tituloY = MAXY / 6;
     int primeiraOpcaoY = (MAXY / 6) * 2;
 
-    screenClear();  
+    screenClear();
     desenhaMoldura();
 
     while (1) {
-        screenSetColor(YELLOW, BLACK);
         screenGotoxy(MAXX / 2 - 3, tituloY);
         printf("QIX GAME");
 
@@ -420,8 +718,11 @@ void menu() {
         screenGotoxy(MAXX / 2 - 6, primeiraOpcaoY + 4);
         printf("%sCRÉDITOS", opcao == 3 ? "-> " : "   ");
 
-        screenGotoxy(MAXX / 2 - 4, primeiraOpcaoY + 6);
-        printf("%sSAIR", opcao == 4 ? "-> " : "   ");
+        screenGotoxy(MAXX / 2 - 7, primeiraOpcaoY + 6);
+        printf("%sSCOREBOARD", opcao == 4 ? "-> " : "   ");  
+
+        screenGotoxy(MAXX / 2 - 4, primeiraOpcaoY + 8);
+        printf("%sSAIR", opcao == 5 ? "-> " : "   ");  
         
         screenUpdate();
 
@@ -429,15 +730,15 @@ void menu() {
             ch = readch();
 
             switch (ch) {
-                case 'w':  
+                case 'w':
                     opcao--;
-                    if (opcao < 1) opcao = 4;
+                    if (opcao < 1) opcao = 5;
                     break;
                 case 's':
                     opcao++;
-                    if (opcao > 4) opcao = 1;
+                    if (opcao > 5) opcao = 1;
                     break;
-                case '\n':  
+                case '\n':
                     switch (opcao) {
                         case 1: 
                             iniciarMatriz();
@@ -445,7 +746,7 @@ void menu() {
                             screenClear();
                             desenhaMoldura();
                             break;
-                        case 2:  
+                        case 2: 
                             screenClear();
                             desenhaMoldura();
                             screenGotoxy(MAXX / 2 - 8, MAXY / 2);
@@ -469,7 +770,10 @@ void menu() {
                             screenClear();
                             desenhaMoldura();
                             break;
-                        case 4:  
+                        case 4: 
+                            exibirScoreboard(); 
+                            break;
+                        case 5:
                             screenClear();
                             desenhaMoldura();
                             screenGotoxy(MAXX / 2 - 8, MAXY / 2);
@@ -490,9 +794,7 @@ int main() {
     screenInit(1);
     keyboardInit();
     timerInit(30);
-
     menu();
-
     keyboardDestroy();
     screenDestroy();
     return 0;
