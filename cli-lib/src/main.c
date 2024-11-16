@@ -448,7 +448,6 @@ int verificarColisaoRastroNaMatriz() {
 void moverInimigo() {
     static int contadorMovimento = 0;
 
-    
     if (contadorMovimento++ >= 100) {  
         enemy.tipoMovimento = (enemy.tipoMovimento + 1) % 3;  
         contadorMovimento = 0;
@@ -501,34 +500,23 @@ void moverInimigo() {
             passosRestantes = (rand() % 10) + 5;  
         }
 
+        int newX = enemy.x + enemy.incX;
+        int newY = enemy.y + enemy.incY;
+
+        // Verificação de colisões
+        if (newX <= MINX + 1 || newX >= MAXX - 5 || strcmp(matriz[newY][newX].exib, "O") == 0) {
+            enemy.incX = -enemy.incX;  
+        }
+        if (newY <= MINY + 1 || newY >= MAXY - 5 || strcmp(matriz[newY][newX].exib, "O") == 0) {
+            enemy.incY = -enemy.incY;  
+        }
+
         enemy.x += enemy.incX;
         enemy.y += enemy.incY;
 
         passosRestantes--;
 
-        if (enemy.x <= MINX + 1) {
-            enemy.x = MINX + 2;
-            enemy.incX = 1;
-            passosRestantes = 5;
-        }
-        if (enemy.x >= MAXX - 5) {
-            enemy.x = MAXX - 6;
-            enemy.incX = -1;
-            passosRestantes = 5;
-        }
-        if (enemy.y <= MINY + 1) {
-            enemy.y = MINY + 2;
-            enemy.incY = 1;
-            passosRestantes = 5;
-        }
-        if (enemy.y >= MAXY - 5) {
-            enemy.y = MAXY - 6;
-            enemy.incY = -1;
-            passosRestantes = 5;
-        }
-
     } else if (enemy.tipoMovimento == 2) {  
-        
         if (player.x > enemy.x) {
             enemy.incX = 1;  
         } else if (player.x < enemy.x) {
@@ -545,21 +533,21 @@ void moverInimigo() {
             enemy.incY = 0;  
         }
 
-      
         int newX = enemy.x + enemy.incX;
         int newY = enemy.y + enemy.incY;
 
-       
-        if (newX <= MINX + 1 || newX >= MAXX - 5) {
-            enemy.incX = -enemy.incX;
+        // Verificação de colisões
+        if (newX <= MINX + 1 || newX >= MAXX - 5 || strcmp(matriz[newY][newX].exib, "O") == 0) {
+            enemy.incX = -enemy.incX;  
         }
-        if (newY <= MINY + 1 || newY >= MAXY - 5) {
-            enemy.incY = -enemy.incY;
+        if (newY <= MINY + 1 || newY >= MAXY - 5 || strcmp(matriz[newY][newX].exib, "O") == 0) {
+            enemy.incY = -enemy.incY;  
         }
 
         enemy.x += enemy.incX;
         enemy.y += enemy.incY;
     }
+
     if (verificarColisaoRastroNaMatriz()) {
         screenClear();
         desenhaMoldura();
@@ -579,6 +567,7 @@ void moverInimigo() {
 
     desenhaInimigo();
 }
+
 
 void exibirScoreboard() {
     FILE* arquivo = fopen("scoreboard.txt", "r");
