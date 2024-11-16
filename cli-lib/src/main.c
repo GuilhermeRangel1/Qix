@@ -57,7 +57,7 @@ struct inimigo enemy = {2, 2, 2, 2, 0, {
 }};
 struct grid matriz[MAXY][MAXX];
 
-/*
+
 char bordaInterna [2] = "a";
 char preenchimento [2] = "$";
 int total = ((MAXX -2) * (MAXY-2))*(75/100); 
@@ -75,7 +75,7 @@ int contador(char *caractere) {
 
     return count;
 }
-*/
+
 
 struct no* criarNo(char* nome, double tempo) {
     struct no* novoNo = (struct no*)malloc(sizeof(struct no));
@@ -147,6 +147,8 @@ void liberarLista(struct no* head) {
 
 
 void vitoria(struct no** head) {
+    end = time(NULL);
+    double tempo = difftime(end, start);
     screenClear();
     screenSetColor(GREEN, BLACK);
     screenGotoxy(MAXX / 2 - 5, MAXY / 2 - 1);
@@ -178,10 +180,7 @@ void vitoria(struct no** head) {
             i++;  
         }
     }
-    nome[i] = '\0'; 
-
-    end = time(NULL);
-    double tempo = difftime(end, start); 
+    nome[i] = '\0';  
 
     screenClear();
     screenGotoxy(MAXX / 2 - 5, MAXY / 2 + 1);
