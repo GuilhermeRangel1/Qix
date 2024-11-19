@@ -6,7 +6,7 @@
 #include "timer.h"
 #include <time.h> 
 
-#define MAXX 160
+#define MAXX 160    
 #define MAXY 48
 #define MINX 0
 #define MINY 0
@@ -61,6 +61,8 @@ struct grid matriz[MAXY][MAXX];
 char bordaInterna [2] = "O";
 char preenchimento [2] = "#";
 int total = ((MAXX - 2) * (MAXY - 2) * 75) / 100; 
+
+int maiorAst = 1;
 
 int contador(char *caractere) {
     int count = 0;
@@ -200,6 +202,7 @@ void iniciarMatriz() {
     for (int i = MINY + 2; i < MAXY - 1; i++) {  
         for (int j = MINX + 2; j < MAXX - 1; j++) {  
             strcpy(matriz[i][j].exib, " ");
+            matriz[i][j].borda = 0;
         }
     }
 }
@@ -243,6 +246,7 @@ void desenhaMoldura() {
                 printf("%s", exib);
                 strcpy(matriz[i][j].exib, exib);
             }
+            matriz[i][j].borda = 0;
         }
     }
 }
@@ -321,6 +325,7 @@ void preencher (struct node** head) {
             if (checkAst){
                 while(strcmp(matriz[i][j].exib, "*") != 0 && j < MAXX) {
                     strcpy(matriz[i][j].exib, "#");
+                    matriz[i][j].borda = 1;
                     screenGotoxy(j, i);
                     printf("#");
                     j++;
@@ -402,6 +407,8 @@ void mov(int proxX, int proxY) {
     
     player.x = proxX;
     player.y = proxY;
+
+    if (player.x > maiorAst) maiorAst = player.x;
 
     screenSetColor(WHITE, WHITE);
     screenGotoxy(player.x, player.y);
@@ -572,7 +579,7 @@ void moverInimigo() {
 void exibirScoreboard() {
     FILE* arquivo = fopen("scoreboard.txt", "r");
     if (arquivo == NULL) {
-        printf("Erro ao abrir o arquivo scoreboard.txt.\n");
+        printf("\n");
         return;
     }
 
@@ -619,23 +626,26 @@ void iniciarJogo() {
             ch = readch();
             switch (ch) {
                 case 119: 
-                    if (player.y  > 1) {
+                    if (player.y  > 1 && matriz[player.y - 1][player.x].borda != 1) {
                         mov(player.x, player.y - 1);
                     }
                     break;
                 case 115: 
-                    if (player.y < MAXY - 1) {
+                    if (player.y < MAXY - 1 && matriz[player.y + 1][player.x].borda != 1) {
                         mov(player.x, player.y + 1);
                     }
                     break;
                 case 97: 
-                    if (player.x > 1) {
+                    if (player.x > 1 && matriz[player.y][player.x - 1].borda != 1) {
                         mov(player.x - 1, player.y);
                     }
                     break;
                 case 100:  
-                    if (player.x  < MAXX - 1) {
-                        mov(player.x + 1, player.y);
+                    if (player.x  < MAXX - 1 && matriz[player.y][player.x + 1].borda != 1) {
+                        if (player.y == MINY + 1 || player.y == MAXY - 1) {
+                            if (player.x + 1 <= maiorAst) mov(player.x + 1, player.y);
+                        }
+                        else mov(player.x + 1, player.y);
                     }
                     break;
                 default:
@@ -682,6 +692,29 @@ void iniciarJogo() {
 
         screenUpdate();
     }
+}
+
+void exibirInstrucoes() {
+    screenClear();
+    desenhaMoldura();
+    screenGotoxy((MAXX / 2) - (12 / 2), MAXY / 4);
+    printf("Instruções do Jogo");
+    screenGotoxy((MAXX / 2) - (42 / 2), MAXY / 4 + 1);
+    printf("1. Use as teclas WASD para mover o jogador (@)");
+    screenGotoxy((MAXX / 2) - (42 / 2), MAXY / 4 + 2);
+    printf("2. Evite os inimigos representados por #");
+    screenGotoxy((MAXX / 2) - (42 / 2), MAXY / 4 + 3);
+    printf("3. Preencha a tela com #");
+    screenGotoxy((MAXX / 2) - (42 / 2), MAXY / 4 + 4);
+    printf("4. Pressione 'Esc' para sair");
+    screenGotoxy((MAXX / 2) - (42 / 2), MAXY / 4 + 5);
+    printf("5. Tente completar o jogo no menor tempo possível");
+    screenGotoxy((MAXX / 2) - (42 / 2), MAXY / 4 + 6);
+    printf("Boa sorte!");
+    screenUpdate();
+    readch();
+    screenClear();
+    desenhaMoldura();
 }
 
 void menu() {
@@ -735,23 +768,16 @@ void menu() {
                             desenhaMoldura();
                             break;
                         case 2: 
-                            screenClear();
-                            desenhaMoldura();
-                            screenGotoxy(MAXX / 2 - 8, MAXY / 2);
-                            printf("Instruções: A ser definido");
-                            screenUpdate();
-                            readch();
-                            screenClear();
-                            desenhaMoldura();
+                            exibirInstrucoes();
                             break;
                         case 3: 
                             screenClear();
                             desenhaMoldura();
-                            screenGotoxy((MAXX / 2) - (42 / 2), MAXY / 2);
+                            screenGotoxy((MAXX / 2) - (42 / 2), MAXY / 4);
                             printf("Programador e Game Designer: Guilherme Vinícius");
-                            screenGotoxy((MAXX / 2) - (23 / 2), MAXY / 2 + 1);
+                            screenGotoxy((MAXX / 2) - (23 / 2), MAXY / 4 + 1);
                             printf("Programador: Arthur Xavier");
-                            screenGotoxy((MAXX / 2) - (28 / 2), MAXY / 2 + 2);
+                            screenGotoxy((MAXX / 2) - (28 / 2), MAXY / 4 + 2);
                             printf("Programador: Antônio Laprovitera");
                             screenUpdate();
                             readch();
