@@ -324,6 +324,7 @@ void preencher (struct node** head) {
             
             if (checkAst){
                 while(strcmp(matriz[i][j].exib, "*") != 0 && j < MAXX) {
+                    screenSetColor(LIGHTMAGENTA, WHITE);
                     strcpy(matriz[i][j].exib, "#");
                     matriz[i][j].borda = 1;
                     screenGotoxy(j, i);
@@ -339,6 +340,7 @@ void preencher (struct node** head) {
     current = *head;
     while (current != NULL) {  
         screenGotoxy(current->x, current->y);
+        screenSetColor(CYAN, BLACK);
         printf("O");
         strcpy(matriz[current->y][current->x].exib, "O");
         current = current->next;  
@@ -479,21 +481,48 @@ void moverInimigo() {
 
     apagarInimigo();
 
-    if (enemy.tipoMovimento == 0) {  
-        int newX = enemy.x + enemy.incX;
-        int newY = enemy.y + enemy.incY;
+    int newX, newY;
 
-        if (newX <= MINX + 1 || newX >= MAXX - 5 || strcmp(matriz[newY][newX].exib, "O") == 0) {
-            enemy.incX = -enemy.incX;  
+   
+    int verificaZonaDeSeguranca(int x, int y) {
+        for (int i = -1; i < 5; i++) { 
+            for (int j = -1; j < 5; j++) { 
+                int posX = x + j;
+                int posY = y + i;
+
+                
+                if (posX >= MINX && posX < MAXX && posY >= MINY && posY < MAXY) {
+                    if (strcmp(matriz[posY][posX].exib, "O") == 0) {
+                        return 1; 
+                    }
+                }
+            }
         }
-        if (newY <= MINY + 1 || newY >= MAXY - 5 || strcmp(matriz[newY][newX].exib, "O") == 0) {
-            enemy.incY = -enemy.incY;  
+        return 0; 
+    }
+
+   
+    void calculaProximoMovimento(int *incX, int *incY) {
+        newX = enemy.x + *incX;
+        newY = enemy.y + *incY;
+
+       
+        if (newX <= MINX + 1 || newX >= MAXX - 5 || verificaZonaDeSeguranca(newX, newY)) {
+            *incX = -*incX;  
         }
+        if (newY <= MINY + 1 || newY >= MAXY - 5 || verificaZonaDeSeguranca(newX, newY)) {
+            *incY = -*incY;  
+        }
+    }
+
+    
+    if (enemy.tipoMovimento == 0) {  
+        calculaProximoMovimento(&enemy.incX, &enemy.incY);
 
         enemy.x += enemy.incX;
         enemy.y += enemy.incY;
-        
-    } else if (enemy.tipoMovimento == 1) {  
+
+    } else if (enemy.tipoMovimento == 1) { 
         static int passosRestantes = 0;
 
         if (passosRestantes <= 0) {
@@ -507,16 +536,7 @@ void moverInimigo() {
             passosRestantes = (rand() % 10) + 5;  
         }
 
-        int newX = enemy.x + enemy.incX;
-        int newY = enemy.y + enemy.incY;
-
-        
-        if (newX <= MINX + 1 || newX >= MAXX - 5 || strcmp(matriz[newY][newX].exib, "O") == 0) {
-            enemy.incX = -enemy.incX;  
-        }
-        if (newY <= MINY + 1 || newY >= MAXY - 5 || strcmp(matriz[newY][newX].exib, "O") == 0) {
-            enemy.incY = -enemy.incY;  
-        }
+        calculaProximoMovimento(&enemy.incX, &enemy.incY);
 
         enemy.x += enemy.incX;
         enemy.y += enemy.incY;
@@ -540,16 +560,7 @@ void moverInimigo() {
             enemy.incY = 0;  
         }
 
-        int newX = enemy.x + enemy.incX;
-        int newY = enemy.y + enemy.incY;
-
-        
-        if (newX <= MINX + 1 || newX >= MAXX - 5 || strcmp(matriz[newY][newX].exib, "O") == 0) {
-            enemy.incX = -enemy.incX;  
-        }
-        if (newY <= MINY + 1 || newY >= MAXY - 5 || strcmp(matriz[newY][newX].exib, "O") == 0) {
-            enemy.incY = -enemy.incY;  
-        }
+        calculaProximoMovimento(&enemy.incX, &enemy.incY);
 
         enemy.x += enemy.incX;
         enemy.y += enemy.incY;
@@ -566,7 +577,7 @@ void moverInimigo() {
             if (keyhit()) {
                 int ch = readch();
                 if (ch == '\n' || ch == 27) {
-                    return;
+                    return;  
                 }
             }
         }
