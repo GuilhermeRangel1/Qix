@@ -147,6 +147,17 @@ void liberarLista(struct no* head) {
     }
 }
 
+void liberarListaGameOver(struct node* head) {
+    struct node* atual = head->next;
+    head->next = NULL;
+    head->x = 2;
+    head->y = MAXY / 2;
+    while (atual != NULL) {
+        struct node* temp = atual;
+        atual = atual->next;
+        free(temp);
+    }
+}
 
 void vitoria(struct no** head) {
     end = time(NULL);
@@ -392,7 +403,7 @@ void printList(struct node* head) {
     printf("NULL\n");  
 }
 
-struct node *head = NULL;
+struct node *head;
 void mov(int proxX, int proxY) {
     screenSetColor(YELLOW, BLACK);
     screenGotoxy(player.x, player.y);
@@ -688,6 +699,8 @@ void iniciarJogo() {
             screenClear();
             desenhaMoldura();
             screenGotoxy(MAXX / 2 - 5, MAXY / 2);
+            liberarListaGameOver(head);
+            maiorAst = 1;
             printf("GAME OVER");
             screenUpdate();
 
