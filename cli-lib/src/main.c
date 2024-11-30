@@ -5,14 +5,12 @@
 #include "keyboard.h"
 #include "timer.h"
 #include <time.h> 
-
 #define MAXX 160    
 #define MAXY 48
 #define MINX 0
 #define MINY 0
 
-time_t start, end;
-
+//DEFINIÇÃO DAS STRUCTS
 struct jogador {
     int x;
     int y;
@@ -47,7 +45,6 @@ struct no {
     struct no *proximo;
 };
 
-struct jogador player = {(MAXX / 2), (MAXY - 2), {'@', '\0'}};
 struct inimigo enemy = {2, 2, 2, 2, 0, {  
     {'#', '#', '#', '#', '#'},
     {'#', ' ', ' ', ' ', '#'},
@@ -55,14 +52,63 @@ struct inimigo enemy = {2, 2, 2, 2, 0, {
     {'#', ' ', ' ', ' ', '#'},
     {'#', '#', '#', '#', '#'}
 }};
+
+//VARIÁVEIS GLOBAIS
+
 struct grid matriz[MAXY][MAXX];
-
-
+struct jogador player = {(MAXX / 2), (MAXY - 2), {'@', '\0'}};
+time_t start, end;
 char bordaInterna [2] = "O";
 char preenchimento [2] = "#";
 int total = ((MAXX - 2) * (MAXY - 2) * 75) / 100; 
-
 int maiorAst = 1;
+struct node *head;
+
+//FUNÇÕES
+int contador(char *caractere);
+struct no* criarNo(char* nome, double tempo);
+void inserirOrdenado(struct no** head, char* nome, double tempo);
+void lerScores(struct no** head);
+void salvarScores(struct no* head);
+void liberarLista(struct no* head);
+void exibirScoreboard();
+void liberarListaGameOver(struct node* head);
+void vitoria(struct no** head);
+int verificarBordaParaPLayer();
+void desenhaMoldura();
+void desenhaInimigo();
+void apagarInimigo();
+void comeco();
+void preencher (struct node** head);
+void add (struct node ** head, int x, int y);
+void mov(int proxX, int proxY);
+int verificarColisao();
+int verificarColisaoRastroNaMatriz();
+void moverInimigo();
+void iniciarJogo();
+void exibirInstrucoes();
+void menu();
+void iniciarMatriz();
+
+int main() {
+    iniciarMatriz();
+    screenInit(1);
+    keyboardInit();
+    timerInit(30);
+    menu();
+    keyboardDestroy();
+    screenDestroy();
+    return 0;
+}
+
+void iniciarMatriz() {
+    for (int i = MINY + 2; i < MAXY - 1; i++) {  
+        for (int j = MINX + 2; j < MAXX - 1; j++) {  
+            strcpy(matriz[i][j].exib, " ");
+            matriz[i][j].borda = 0;
+        }
+    }
+}
 
 int contador(char *caractere) {
     int count = 0;
@@ -76,87 +122,6 @@ int contador(char *caractere) {
     }
 
     return count;
-}
-
-
-struct no* criarNo(char* nome, double tempo) {
-    struct no* novoNo = (struct no*)malloc(sizeof(struct no));
-    if (novoNo == NULL) {
-        printf("Erro ao alocar memória para o nó.\n");
-        return NULL;
-    }
-    strncpy(novoNo->nome, nome, 5);
-    novoNo->tempo = tempo;
-    novoNo->proximo = NULL;
-    return novoNo;
-}
-
-void inserirOrdenado(struct no** head, char* nome, double tempo) {
-    struct no* novoNo = criarNo(nome, tempo);
-    if (novoNo == NULL) return;
-
-    if (*head == NULL || (*head)->tempo > tempo) {
-        
-        novoNo->proximo = *head;
-        *head = novoNo;
-    } else {
-       
-        struct no* atual = *head;
-        while (atual->proximo != NULL && atual->proximo->tempo <= tempo) {
-            atual = atual->proximo;
-        }
-        novoNo->proximo = atual->proximo;
-        atual->proximo = novoNo;
-    }
-}
-
-void lerScores(struct no** head) {
-    FILE* arquivo = fopen("scoreboard.txt", "r");
-    if (arquivo != NULL) {
-        char nome[5];
-        double tempo;
-        while (fscanf(arquivo, "%s %lf", nome, &tempo) == 2) {
-            inserirOrdenado(head, nome, tempo);
-        }
-        fclose(arquivo);
-    } else {
-        printf("Erro ao abrir o arquivo para leitura.\n");
-    }
-}
-
-void salvarScores(struct no* head) {
-    FILE* arquivo = fopen("scoreboard.txt", "w"); 
-    if (arquivo != NULL) {
-        struct no* atual = head;
-        while (atual != NULL) {
-            fprintf(arquivo, "%s %.2f\n", atual->nome, atual->tempo);
-            atual = atual->proximo;
-        }
-        fclose(arquivo);
-    } else {
-        printf("Erro ao abrir o arquivo para salvar os scores.\n");
-    }
-}
-
-void liberarLista(struct no* head) {
-    struct no* atual = head;
-    while (atual != NULL) {
-        struct no* temp = atual;
-        atual = atual->proximo;
-        free(temp);
-    }
-}
-
-void liberarListaGameOver(struct node* head) {
-    struct node* atual = head->next;
-    head->next = NULL;
-    head->x = 2;
-    head->y = MAXY / 2;
-    while (atual != NULL) {
-        struct node* temp = atual;
-        atual = atual->next;
-        free(temp);
-    }
 }
 
 void vitoria(struct no** head) {
@@ -206,16 +171,109 @@ void vitoria(struct no** head) {
 
     while (getchar() != '\n') {} 
 }
-
-
-
-void iniciarMatriz() {
-    for (int i = MINY + 2; i < MAXY - 1; i++) {  
-        for (int j = MINX + 2; j < MAXX - 1; j++) {  
-            strcpy(matriz[i][j].exib, " ");
-            matriz[i][j].borda = 0;
-        }
+struct no* criarNo(char* nome, double tempo) {
+    struct no* novoNo = (struct no*)malloc(sizeof(struct no));
+    if (novoNo == NULL) {
+        printf("Erro ao alocar memória para o nó.\n");
+        return NULL;
     }
+    strncpy(novoNo->nome, nome, 5);
+    novoNo->tempo = tempo;
+    novoNo->proximo = NULL;
+    return novoNo;
+}
+void inserirOrdenado(struct no** head, char* nome, double tempo) {
+    struct no* novoNo = criarNo(nome, tempo);
+    if (novoNo == NULL) return;
+
+    if (*head == NULL || (*head)->tempo > tempo) {
+        
+        novoNo->proximo = *head;
+        *head = novoNo;
+    } else {
+       
+        struct no* atual = *head;
+        while (atual->proximo != NULL && atual->proximo->tempo <= tempo) {
+            atual = atual->proximo;
+        }
+        novoNo->proximo = atual->proximo;
+        atual->proximo = novoNo;
+    }
+}
+void salvarScores(struct no* head) {
+    FILE* arquivo = fopen("scoreboard.txt", "w"); 
+    if (arquivo != NULL) {
+        struct no* atual = head;
+        while (atual != NULL) {
+            fprintf(arquivo, "%s %.2f\n", atual->nome, atual->tempo);
+            atual = atual->proximo;
+        }
+        fclose(arquivo);
+    } else {
+        printf("Erro ao abrir o arquivo para salvar os scores.\n");
+    }
+}
+void lerScores(struct no** head) {
+    FILE* arquivo = fopen("scoreboard.txt", "r");
+    if (arquivo != NULL) {
+        char nome[5];
+        double tempo;
+        while (fscanf(arquivo, "%s %lf", nome, &tempo) == 2) {
+            inserirOrdenado(head, nome, tempo);
+        }
+        fclose(arquivo);
+    } else {
+        printf("Erro ao abrir o arquivo para leitura.\n");
+    }
+}
+
+void liberarLista(struct no* head) {
+    struct no* atual = head;
+    while (atual != NULL) {
+        struct no* temp = atual;
+        atual = atual->proximo;
+        free(temp);
+    }
+}
+
+void liberarListaGameOver(struct node* head) {
+    struct node* atual = head->next;
+    head->next = NULL;
+    head->x = 0;
+    head->y = MAXY / 2;
+    while (atual != NULL) {
+        struct node* temp = atual;
+        atual = atual->next;
+        free(temp);
+    }
+}
+void exibirScoreboard() {
+    FILE* arquivo = fopen("scoreboard.txt", "r");
+    if (arquivo == NULL) {
+        printf("\n");
+        return;
+    }
+
+    screenClear();
+    desenhaMoldura();
+    screenSetColor(WHITE, BLACK);
+    screenGotoxy((MAXX / 2) - (12 / 2), 2);
+    printf("===== TOP SCOREBOARD =====");
+
+    char nome[5];
+    double tempo;
+    int linha = 4;
+
+    while (fscanf(arquivo, "%s %lf", nome, &tempo) == 2) {
+        screenGotoxy((MAXX / 2), linha);  
+        printf("%s - %.2f", nome, tempo);
+        linha++;
+    }
+    fclose(arquivo);
+    screenUpdate();
+    getchar(); 
+    screenClear();
+    desenhaMoldura();
 }
 
 int verificarBordaParaPLayer() {
@@ -368,7 +426,6 @@ void preencher (struct node** head) {
     *head = NULL;  
 }
 
-
 void add (struct node ** head, int x, int y){
     struct node* newNode = (struct node*)malloc(sizeof(struct node));
     newNode->x = x;
@@ -388,22 +445,6 @@ void add (struct node ** head, int x, int y){
     temp->next = newNode;
 }
 
-void printList(struct node* head) {
-    struct node* current = head;  
-    if (current == NULL) {
-        printf("A lista está vazia.\n");
-        return;
-    }
-
-    printf("Lista encadeada: ");
-    while (current != NULL) {
-        printf("x = %d y = %d -> ", current->x, current->y);  
-        current = current->next;         
-    }
-    printf("NULL\n");  
-}
-
-struct node *head;
 void mov(int proxX, int proxY) {
     screenSetColor(YELLOW, BLACK);
     screenGotoxy(player.x, player.y);
@@ -435,19 +476,6 @@ int verificarColisao() {
             player.y >= enemy.y && player.y < enemy.y + 5);
 }
 
-void verificarcolisaoinimigo() {
-    for (int i = 0; i < 5; i++) {
-        for (int j = 0; j < 5; j++) {
-            int posX = enemy.x + j;
-            int posY = enemy.y + i;
-            if (enemy.matriz[i][j] == '@') {
-                screenGotoxy(posX, posY);
-                printf(" ");
-                strcpy(matriz[posY][posX].exib, " ");
-            }
-        }
-    }
-}
 
 int verificarColisaoRastroNaMatriz() {
     for (int i = 0; i < 5; i++) {
@@ -597,36 +625,6 @@ void moverInimigo() {
     desenhaInimigo();
 }
 
-
-void exibirScoreboard() {
-    FILE* arquivo = fopen("scoreboard.txt", "r");
-    if (arquivo == NULL) {
-        printf("\n");
-        return;
-    }
-
-    screenClear();
-    desenhaMoldura();
-
-    screenGotoxy((MAXX / 2) - (12 / 2), 2);
-    printf("===== TOP SCOREBOARD =====");
-
-    char nome[5];
-    double tempo;
-    int linha = 4;
-
-    while (fscanf(arquivo, "%s %lf", nome, &tempo) == 2) {
-        screenGotoxy((MAXX / 2), linha);  
-        printf("%s - %.2f", nome, tempo);
-        linha++;
-    }
-    fclose(arquivo);
-    screenUpdate();
-    getchar(); 
-    screenClear();
-    desenhaMoldura();
-}
-
 void iniciarJogo() {
     start = time(NULL);
     player.x = 1;
@@ -722,6 +720,7 @@ void exibirInstrucoes() {
     screenClear();
     desenhaMoldura();
     screenGotoxy((MAXX / 2) - (12 / 2), MAXY / 4);
+    screenSetColor(WHITE, BLACK);
     printf("Instruções do Jogo");
     screenGotoxy((MAXX / 2) - (42 / 2), MAXY / 4 + 1);
     printf("1. Use as teclas WASD para mover o jogador (@)");
@@ -751,6 +750,7 @@ void menu() {
     desenhaMoldura();
 
     while (1) {
+        screenSetColor(WHITE, BLACK);
         screenGotoxy(MAXX / 2 - 3, tituloY);
         printf("QIX GAME");
 
@@ -797,8 +797,9 @@ void menu() {
                         case 3: 
                             screenClear();
                             desenhaMoldura();
-                            screenGotoxy((MAXX / 2) - (42 / 2), MAXY / 4);
-                            printf("Programador e Game Designer: Guilherme Vinícius");
+                            screenSetColor(WHITE, BLACK);
+                            screenGotoxy((MAXX / 2) - (27 / 2), MAXY / 4);
+                            printf("Programador: Guilherme Vinícius");
                             screenGotoxy((MAXX / 2) - (23 / 2), MAXY / 4 + 1);
                             printf("Programador: Arthur Xavier");
                             screenGotoxy((MAXX / 2) - (28 / 2), MAXY / 4 + 2);
@@ -825,15 +826,4 @@ void menu() {
             }
         }
     }
-}
-
-int main() {
-    iniciarMatriz();
-    screenInit(1);
-    keyboardInit();
-    timerInit(30);
-    menu();
-    keyboardDestroy();
-    screenDestroy();
-    return 0;
 }
