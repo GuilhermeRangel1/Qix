@@ -14,9 +14,14 @@ No jogo QIX, há dois tipos principais de inimigos:
 ## 👾 Pontuação
 A Scoreboard é baseada no tempo do usuário, conforme menor o tempo, maior a posiçãp na tabela.
 
+## ⚙️ Compilação - Exemplo
+```bash
+cd /mnt/c/Users/usuario/Downloads/faculdade/Qix/cli-lib
+gcc ./src/main.c $(find ./src -name "*.c" ! -name "main.c") -I./include -o qix
+./qix
+```
 ## 👩‍💻 Membros
 Este projeto foi desenvolvido com o esforço colaborativo dos seguintes membros:
-
 - **[Arthur Xavier](https://github.com/arthurxavi)** 
 - **[Antônio Laprovitera](https://github.com/antoniolaprov)** 
 - **[Guilherme Vinícius](https://github.com/GuilhermeRangel1)**
